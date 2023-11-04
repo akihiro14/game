@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>足し算ゲーム</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 50px;
+    }
+    #question {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    #question-number, #equation {
+      font-weight: bold;
+      display: block;
+    }
+    #equation {
+      font-size: 20px;
+    }
+    #answer {
+      padding: 5px;
+      font-size: 16px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>足し算ゲーム</h1>
+
+<button onclick="startGame()">スタート</button>
+
+<div id="question">
+  <p id="question-number"></p>
+  <p id="equation"></p>
+</div>
+
+<input type="text" id="answer" placeholder="答えを入力" onkeypress="handleKeyPress(event)">
+<button onclick="checkAnswer()">回答する</button>
+
+<div id="result">
+  <p id="startTime"></p>
+  <p id="endTime"></p>
+  <p id="elapsedTime"></p>
+</div>
+
+<script>
+let currentQuestion = 1;
+let correctAnswers = 0;
+let start = 0;
+let startTime;
+let endTime;
+let intervalId;
+
+// startGame 関数を window オブジェクトに追加
+window.startGame = function() {
+  start = 1;
+  currentQuestion = 1;
+  correctAnswers = 0;
+  startTime = new Date();
+  askQuestion();
+}
+
+function askQuestion() {
+  const num1 = Math.floor(Math.random() * 10);
+  const num2 = Math.floor(Math.random() * 10);
+  const correctAnswer = num1 + num2;
+
+  document.getElementById('question-number').textContent = `問題 ${currentQuestion}`;
+  document.getElementById('equation').textContent = `${num1} + ${num2} = ?`;
+
+  const answerElement = document.getElementById('answer');
+  answerElement.value = '';
+  answerElement.disabled = false; // 問題が始まったら入力欄を有効にする
+
+  if (start === 1) {
+    answerElement.focus();
+  }
+
+  // 10問目の場合のみ更新処理を追加
+  if (currentQuestion <= 10) {
+    updateElapsedTime();
+    startElapsedTimeUpdate();
+  }
+}
+
+function checkAnswer() {
+  const userAnswer = parseInt(document.getElementById('answer').value, 10);
+  const correctAnswer = getCorrectAnswer();
+
+  if (!isNaN(userAnswer)) {
+    if (userAnswer === correctAnswer) {
+      correctAnswers++;
+    }
+    currentQuestion++;
+
+    if (currentQuestion <= 10) {
+      askQuestion();
+    } else {
+      endTime = new Date();
+      clearInterval(intervalId);
+      displayResult();
+    }
+  } else {
+    document.getElementById('result').textContent = '有効な数字を入力してください。';
+  }
+}
+
+function displayResult() {
+  // #result 要素が存在するか確認
+  const resultElement = document.getElementById('result');
+  if (resultElement) {
+    const elapsedTime = (endTime - startTime) / 1000;
+
+    // 各情報を表示
+    document.getElementById('startTime').innerHTML = `開始時刻: ${startTime.toLocaleTimeString()}`;
+    document.getElementById('endTime').innerHTML = `合格時刻: ${endTime.toLocaleTimeString()}`;
+    document.getElementById('elapsedTime').innerHTML = `経過時間: ${elapsedTime.toFixed(2)}秒`;
+
+    // 10問目のみ表示
+    resultElement.style.display = 'block';
+
+    // 10問正解で入力欄を無効にする
+    const answerElement = document.getElementById('answer');
+    if (answerElement) {
+      answerElement.disabled = true;
+    }
+  }
+}
+
+function handleKeyPress(event) {
+  if (event.key === 'Enter') {
+    checkAnswer();
+  }
+}
+
+function getCorrectAnswer() {
+  const questionText = document.getElementById('equation').textContent;
+  const match = questionText.match(/(\d+) \+ (\d+) =/);
+  return match ? parseInt(match[1], 10) + parseInt(match[2], 10) : NaN;
+}
+
+function updateElapsedTime() {
+  const currentTime = new Date();
+  const elapsedTime = (currentTime - startTime) / 1000;
+
+  // #elapsedTime 要素が存在するか確認
+  const elapsedTimeElement = document.getElementById('elapsedTime');
+  if (elapsedTimeElement) {
+    elapsedTimeElement.innerHTML = `経過時間: ${elapsedTime.toFixed(2)}秒`;
+  }
+}
+
+function startElapsedTimeUpdate() {
+  intervalId = setInterval(updateElapsedTime, 1000);
+}
+
+</script>
+
+</body>
+</html>
