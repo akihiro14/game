@@ -14,7 +14,7 @@
       font-size: 24px;
       margin-bottom: 20px;
     }
-    #question-number, #equation {
+    .question-number, #equation {
       font-weight: bold;
       display: block;
     }
@@ -30,26 +30,31 @@
       font-size: 20px;
       font-weight: bold;
     }
+    .success-message {
+      font-size: 36px;
+      color: red;
+    }
   </style>
 </head>
 <body>
 
 <h1>足し算ゲーム</h1>
 
-<button onclick="startGame()">スタート</button>
-
-<div id="question">
-  <p id="question-number"></p>
-  <p id="equation"></p>
+<div id="question-block">
+  <button onclick="startGame()">スタート</button>
+  <div id="question">
+    <p class="question-number"></p>
+    <p id="equation"></p>
+  </div>
+  <input type="text" id="answer" placeholder="答えを入力" onkeypress="handleKeyPress(event)">
+  <button onclick="checkAnswer()">回答する</button>
 </div>
-
-<input type="text" id="answer" placeholder="答えを入力" onkeypress="handleKeyPress(event)">
-<button onclick="checkAnswer()">回答する</button>
 
 <div id="result">
   <p id="startTime"></p>
   <p id="endTime"></p>
   <p id="elapsedTime"></p>
+  <p class="success-message"></p>
 </div>
 
 <script>
@@ -60,7 +65,6 @@ let startTime;
 let endTime;
 let intervalId;
 
-// startGame 関数を window オブジェクトに追加
 window.startGame = function() {
   start = 1;
   currentQuestion = 1;
@@ -74,22 +78,19 @@ function askQuestion() {
   const num2 = Math.floor(Math.random() * 10);
   const correctAnswer = num1 + num2;
 
-  document.getElementById('question-number').textContent = `問題 ${currentQuestion}`;
+  document.querySelector('.question-number').textContent = `問題 ${currentQuestion}`;
   document.getElementById('equation').textContent = `${num1} + ${num2} = ?`;
 
   const answerElement = document.getElementById('answer');
   answerElement.value = '';
-  answerElement.disabled = false; // 問題が始まったら入力欄を有効にする
+  answerElement.disabled = false;
 
   if (start === 1) {
     answerElement.focus();
   }
 
-  // 10問目の場合のみ更新処理を追加
-  if (currentQuestion <= 10) {
-    updateElapsedTime();
-    startElapsedTimeUpdate();
-  }
+  updateElapsedTime();
+  startElapsedTimeUpdate();
 }
 
 function checkAnswer() {
@@ -99,8 +100,8 @@ function checkAnswer() {
   if (!isNaN(userAnswer)) {
     if (userAnswer === correctAnswer) {
       correctAnswers++;
+      currentQuestion++;
     }
-    currentQuestion++;
 
     if (currentQuestion <= 10) {
       askQuestion();
@@ -115,20 +116,26 @@ function checkAnswer() {
 }
 
 function displayResult() {
-  // #result 要素が存在するか確認
   const resultElement = document.getElementById('result');
-  if (resultElement) {
+  const questionBlock = document.getElementById('question-block');
+  const successMessageElement = document.querySelector('.success-message');
+  
+  if (resultElement && questionBlock && successMessageElement) {
     const elapsedTime = (endTime - startTime) / 1000;
 
-    // 各情報を表示
     document.getElementById('startTime').innerHTML = `開始時刻: ${startTime.toLocaleTimeString()}`;
     document.getElementById('endTime').innerHTML = `合格時刻: ${endTime.toLocaleTimeString()}`;
     document.getElementById('elapsedTime').innerHTML = `経過時間: ${elapsedTime.toFixed(2)}秒`;
 
-    // 10問目のみ表示
+    if (correctAnswers === 10) {
+      successMessageElement.innerHTML = '10問正解！';
+
+      // #question-block を非表示にする
+      questionBlock.style.display = 'none';
+    }
+
     resultElement.style.display = 'block';
 
-    // 10問正解で入力欄を無効にする
     const answerElement = document.getElementById('answer');
     if (answerElement) {
       answerElement.disabled = true;
@@ -151,8 +158,6 @@ function getCorrectAnswer() {
 function updateElapsedTime() {
   const currentTime = new Date();
   const elapsedTime = (currentTime - startTime) / 1000;
-
-  // #elapsedTime 要素が存在するか確認
   const elapsedTimeElement = document.getElementById('elapsedTime');
   if (elapsedTimeElement) {
     elapsedTimeElement.innerHTML = `経過時間: ${elapsedTime.toFixed(2)}秒`;
